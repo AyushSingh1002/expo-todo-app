@@ -1,0 +1,81 @@
+# GitLab CI/CD configuration for Expo React Native app
+stages:
+  - build
+  - test
+  - deploy
+
+variables:
+  NODE_VERSION: "18"
+
+# Cache node_modules for faster builds
+cache:
+  paths:
+    - node_modules/
+    - .expo/
+
+# Install dependencies
+install_dependencies:
+  stage: build
+  image: node:18-alpine
+  script:
+    - npm ci
+  cache:
+    key: ${CI_COMMIT_REF_SLUG}
+    paths:
+      - node_modules/
+  only:
+    - main
+    - develop
+
+# Run tests
+test:
+  stage: test
+  image: node:18-alpine
+  script:
+    - npm ci
+    - npm run lint
+  cache:
+    key: ${CI_COMMIT_REF_SLUG}
+    paths:
+      - node_modules/
+  only:
+    - main
+    - develop
+
+# Build for Android
+build_android:
+  stage: build
+  image: node:18-alpine
+  script:
+    - npm ci
+    - npx expo install --fix
+    - npx eas build --platform android --non-interactive
+  cache:
+    key: ${CI_COMMIT_REF_SLUG}
+    paths:
+      - node_modules/
+  only:
+    - main
+  artifacts:
+    paths:
+      - build/
+    expire_in: 1 week
+
+# Build for iOS
+build_ios:
+  stage: build
+  image: node:18-alpine
+  script:
+    - npm ci
+    - npx expo install --fix
+    - npx eas build --platform ios --non-interactive
+  cache:
+    key: ${CI_COMMIT_REF_SLUG}
+    paths:
+      - node_modules/
+  only:
+    - main
+  artifacts:
+    paths:
+      - build/
+    expire_in: 1 week
